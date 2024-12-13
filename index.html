@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Info</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f0f0f0;
+      color: #333;
+      text-align: center;
+    }
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #007BFF;
+    }
+    .info {
+      text-align: left;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Your Device Information</h1>
+    <div id="device-info" class="info"></div>
+  </div>
+
+  <script>
+    async function getDeviceInfo() {
+      const deviceInfo = {
+        browser: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screenResolution: window.screen.width + "x" + window.screen.height,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ip: "Fetching...",
+        deviceType: "Unknown",
+        deviceName: "Unknown",
+        geolocation: "Fetching...",
+        isp: "Fetching...",
+        networkType: navigator.connection ? navigator.connection.effectiveType : "Unknown",
+      };
+
+      // Fetch IP and detailed geolocation information
+      try {
+        const response = await fetch('https://ipinfo.io/json?token=3ad4848ddec861');
+        const data = await response.json();
+        deviceInfo.ip = data.ip;
+        deviceInfo.geolocation = `${data.city}, ${data.region}, ${data.country}`;
+        deviceInfo.isp = data.org || "Unknown ISP";
+        deviceInfo.locationDetails = `Latitude: ${data.loc.split(",")[0]}, Longitude: ${data.loc.split(",")[1]}`;
+      } catch (error) {
+        console.error("Failed to fetch geolocation or ISP data:", error);
+      }
+
+      // Detect device type
+      const userAgent = navigator.userAgent.toLowerCase();
+      if (/mobile|android|iphone|ipad/.test(userAgent)) {
+        deviceInfo.deviceType = "Mobile";
+      } else if (/tablet/.test(userAgent)) {
+        deviceInfo.deviceType = "Tablet";
+      } else {
+        deviceInfo.deviceType = "Desktop";
+      }
+
+      // Detect device name
+      if (/windows/.test(userAgent)) {
+        deviceInfo.deviceName = "Windows Device";
+      } else if (/mac/.test(userAgent)) {
+        deviceInfo.deviceName = "Mac Device";
+      } else if (/android/.test(userAgent)) {
+        deviceInfo.deviceName = "Android Device";
+      } else if (/iphone|ipad/.test(userAgent)) {
+        deviceInfo.deviceName = "iOS Device";
+      }
+
+      return deviceInfo;
+    }
+
+    async function displayDeviceInfo() {
+      const infoDiv = document.getElementById('device-info');
+      const info = await getDeviceInfo();
+      
+      for (const [key, value] of Object.entries(info)) {
+        const para = document.createElement('p');
+        para.innerHTML = `<strong>${key}:</strong> ${value}`;
+        infoDiv.appendChild(para);
+      }
+    }
+
+    displayDeviceInfo();
+  </script>
+</body>
+</html>
